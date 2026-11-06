@@ -1,0 +1,7 @@
+winscrape
+winscrape.exe
+notes
+cruft
+*.core
+*.log
+*postactivate
