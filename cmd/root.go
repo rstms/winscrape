@@ -31,23 +31,23 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var cfgFile string
 
+var runtimeDir string
+
 var rootCmd = &cobra.Command{
-	Version: "0.0.1",
+	Version: "0.0.2",
 	Use:     "winscrape",
-	Short:   "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short:   "scrape process window content",
+	Long: `
+Capture a PNG image or OCR text of the main window identified by PID
+`,
 }
+
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
