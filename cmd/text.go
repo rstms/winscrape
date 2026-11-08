@@ -32,7 +32,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var textCmd = &cobra.Command{
@@ -45,9 +44,7 @@ and the resulting text is written to stdout.
 `,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		code, err := Relay(args)
-		cobra.CheckErr(err)
-		os.Exit(code)
+		cobra.CheckErr(Relay("text", args))
 	},
 }
 

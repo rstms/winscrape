@@ -30,7 +30,9 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 package main
 
-import "github.com/rstms/winscrape/cmd"
+import (
+	"github.com/rstms/winscrape/cmd"
+)
 
 func main() {
 	cmd.Execute()

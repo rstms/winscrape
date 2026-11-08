@@ -31,23 +31,77 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"errors"
+	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
-func Relay(args []string) (int, error) {
-	binaryFile, assetsDir, err := GenerateAssets()
+func Relay(command string, args []string) error {
+	debug := ViperGetBool("debug")
+	verbose := ViperGetBool("verbose")
+	binaryFile, dataDir, tempDir, err := GenerateAssets()
 	if err != nil {
-		return 1, Fatal(err)
+		return Fatal(err)
 	}
-	defer os.RemoveAll(assetsDir)
-	cmd := exec.Command(binaryFile, args...)
+	binDir, _ := filepath.Split(binaryFile)
+	if ViperGetBool("retain_assets") {
+		defer fmt.Fprintf(os.Stderr, "Retained files: %s\n", filepath.Join(tempDir, "assets"))
+	} else {
+		defer os.RemoveAll(tempDir)
+	}
+	if debug {
+		args = append([]string{"-d"}, args...)
+	}
+	if verbose {
+		args = append([]string{"-v"}, args...)
+	}
+	cmd := exec.Command(binaryFile, append([]string{command}, args...)...)
+	cmd.Env = []string{}
+	for _, line := range os.Environ() {
+		name, value, _ := strings.Cut(line, "=")
+		switch strings.ToUpper(name) {
+		case "PATH":
+		case "TESSDATA_PREFIX":
+		default:
+			cmd.Env = append(cmd.Env, name+"="+value)
+		}
+	}
+	path, err := AddPath(binDir)
+	if err != nil {
+		return Fatal(err)
+	}
+	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", path))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TESSDATA_PREFIX=%s", dataDir))
+	cmd.Dir = binDir
+	cmd.Stdin = nil
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	exitCode := cmd.ProcessState.ExitCode()
-	if err != nil {
-		return exitCode, Fatal(err)
+	if debug {
+		log.Printf("binaryFile: %s\n", binaryFile)
+		log.Printf("binDir: %s\n", binDir)
+		log.Printf("dataDir: %s\n", dataDir)
+		log.Printf("tempDir: %s\n", tempDir)
+		log.Printf("PATH=%s\n", os.Getenv("PATH"))
+		log.Printf("cmd: %s\n", cmd)
+		log.Printf("cmd.Env[\n%s\n]\n", strings.Join(cmd.Env, "\n"))
+		log.Printf("cmd.Dir: %s\n", cmd.Dir)
 	}
-	return exitCode, nil
+	err = cmd.Run()
+	if err != nil {
+		if errors.Is(err, &exec.ExitError{}) {
+			exitErr, _ := errors.AsType[*exec.ExitError](err)
+			ExitCode = exitErr.ProcessState.ExitCode()
+			if debug {
+				fmt.Fprintf(os.Stderr, "%s\n", exitErr.ProcessState.String())
+			}
+			return Fatal(exitErr)
+		}
+		return Fatal(err)
+	}
+	ExitCode = cmd.ProcessState.ExitCode()
+	return nil
 }

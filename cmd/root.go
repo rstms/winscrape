@@ -37,7 +37,7 @@ import (
 
 var cfgFile string
 
-var runtimeDir string
+var ExitCode int = -1
 
 var rootCmd = &cobra.Command{
 	Version: "0.0.2",
@@ -51,9 +51,10 @@ Capture a PNG image or OCR text of the main window identified by PID
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		os.Exit(ExitCode)
 	}
 }
 func init() {
 	CobraInit(rootCmd)
+	OptionSwitch(rootCmd, "retain-assets", "R", "prevent deletion of temporary directory")
 }

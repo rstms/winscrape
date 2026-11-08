@@ -11,9 +11,9 @@ os := $(if $(SYSTEMROOT),windows,$(shell uname | tr A-Z a-z))
 #
 
 ifeq ($(os),windows)
-  hostname := $(shell hostname)
-  fqdn := "$(hostname).$(shell powershell -Command '(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $$_.IPEnabled -eq $$true }).DNSDomain')"
-  os_version := $(lastword $(subst ],,$(shell cmd /c ver)))
+  hostname := $(shell powershell -c '([System.Net.Dns]::GetHostName())')
+  fqdn := $(shell powershell -c '([System.Net.Dns]::GetHostName()+((Get-DnsClient).ConnectionSpecificSuffix)).Trim().Replace(" ", ".")')
+  os_version := $(shell PowerShell -Command '$$v=[System.Environment]::OSVersion.Version;"$$($$v.Major).$$($$v.Minor).$$($$v.Build).$$($$v.Revision)"')
   arch := $(shell echo $$PROCESSOR_ARCHITECTURE | tr A-Z a-z)
   windows := 1	
   USER := $(USERNAME)
@@ -72,3 +72,4 @@ all_variables = \
     rstms_modules common_go \
     latest_release release_binary dist_target dist_binary \
     config_dir cache_dir
+

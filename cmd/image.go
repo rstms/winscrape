@@ -31,8 +31,6 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -46,9 +44,7 @@ If FILENAME is missing or '-', the image data is written to stdout.
 `,
 	Args: cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		code, err := Relay(args)
-		cobra.CheckErr(err)
-		os.Exit(code)
+		cobra.CheckErr(Relay("image", args))
 	},
 }
 
