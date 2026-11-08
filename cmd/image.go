@@ -44,7 +44,7 @@ If FILENAME is missing or '-', the image data is written to stdout.
 `,
 	Args: cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		cobra.CheckErr(Relay("image", args))
+		cobra.CheckErr(Relay("winocr.exe", "image", args))
 	},
 }
 

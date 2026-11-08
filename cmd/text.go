@@ -44,7 +44,7 @@ and the resulting text is written to stdout.
 `,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cobra.CheckErr(Relay("text", args))
+		cobra.CheckErr(Relay("winocr.exe", "text", args))
 	},
 }
 

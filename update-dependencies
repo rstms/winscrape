@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-command -v exetool >/dev/null 2>&1 || go install github.com/rstms/exetool@latest
-for file in $(exetool depends $(realpath "$1")); do 
-    cp -r $file $(dirname "$1")/$(basename $file)
-done

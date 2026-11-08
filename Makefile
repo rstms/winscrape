@@ -9,7 +9,7 @@ default: build
 
 build: $(binary)
 
-$(binary): fmt
+$(binary): fmt tesseract/assets
 	fix go build . ./...
 	go build -o $@ -buildmode exe 
 
@@ -59,6 +59,7 @@ clean:
 	rm -f $(binary) *.core 
 	go clean
 	rm -rf dist && mkdir dist
+	rm -rf tesseract/assets
 
 sterile: clean
 	go clean -i || true
@@ -70,21 +71,5 @@ sterile: clean
 show-vars:
 	@$(foreach var,$(all_variables),echo $(var)=$($(var));)
 
-
-assets: cmd/assets/bin/winocr.exe cmd/assets/bin/tesseract.exe cmd/assets/tessdata
-
-cmd/assets/bin/winocr.exe:
-	mkdir -p $(dir $@)
-	command -v winocr >/dev/null 2>&1 || go install github.com/rstms/winocr
-	cp $(shell command -v winocr) $@
-	./update-dependencies $@
-	
-cmd/assets/bin/tesseract.exe:
-	mkdir -p $(dir $@)
-	cp $(shell find /c/msys64/$(MSYSTEM_PREFIX)/bin -type f -name tesseract.exe) $@
-	./update-dependencies $@
-
-cmd/assets/tessdata:
-	mkdir -p $@
-	cp -rp $(shell find /c/msys64/$(MSYSTEM_PREFIX)/share -type d -name tessdata)/* $@
-
+tesseract/assets: 
+	./update-assets

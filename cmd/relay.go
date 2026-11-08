@@ -33,6 +33,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/rstms/winscrape/tesseract"
 	"log"
 	"os"
 	"os/exec"
@@ -40,55 +41,60 @@ import (
 	"strings"
 )
 
-func Relay(command string, args []string) error {
+func Relay(filename, command string, args []string) error {
 	debug := ViperGetBool("debug")
 	verbose := ViperGetBool("verbose")
-	binaryFile, dataDir, tempDir, err := GenerateAssets()
+
+	tesseract, err := tesseract.NewTesseract()
 	if err != nil {
 		return Fatal(err)
 	}
-	binDir, _ := filepath.Split(binaryFile)
 	if ViperGetBool("retain_assets") {
-		defer fmt.Fprintf(os.Stderr, "Retained files: %s\n", filepath.Join(tempDir, "assets"))
+		defer fmt.Fprintf(os.Stderr, "Retained files: %s\n", filepath.Join(tesseract.TempDir, "assets"))
 	} else {
-		defer os.RemoveAll(tempDir)
+		defer tesseract.Close()
 	}
+
 	if debug {
 		args = append([]string{"-d"}, args...)
 	}
 	if verbose {
 		args = append([]string{"-v"}, args...)
 	}
-	cmd := exec.Command(binaryFile, append([]string{command}, args...)...)
-	cmd.Env = []string{}
-	for _, line := range os.Environ() {
-		name, value, _ := strings.Cut(line, "=")
-		switch strings.ToUpper(name) {
-		case "PATH":
-		case "TESSDATA_PREFIX":
-		default:
-			cmd.Env = append(cmd.Env, name+"="+value)
+
+	execFile := filepath.Join(tesseract.BinDir, filename)
+	cmd := exec.Command(execFile, append([]string{command}, args...)...)
+	/*
+		cmd.Env = []string{}
+		for _, line := range os.Environ() {
+			name, value, _ := strings.Cut(line, "=")
+			switch strings.ToUpper(name) {
+			case "PATH":
+			case "TESSDATA_PREFIX":
+			default:
+				cmd.Env = append(cmd.Env, name+"="+value)
+			}
 		}
-	}
-	path, err := AddPath(binDir)
-	if err != nil {
-		return Fatal(err)
-	}
-	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", path))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("TESSDATA_PREFIX=%s", dataDir))
-	cmd.Dir = binDir
+		path, err := AddPath(binDir)
+		if err != nil {
+			return Fatal(err)
+		}
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", path))
+		cmd.Env = append(cmd.Env, fmt.Sprintf("TESSDATA_PREFIX=%s", dataDir))
+		cmd.Dir = tesseract.BinDir
+	*/
 	cmd.Stdin = nil
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if debug {
-		log.Printf("binaryFile: %s\n", binaryFile)
-		log.Printf("binDir: %s\n", binDir)
-		log.Printf("dataDir: %s\n", dataDir)
-		log.Printf("tempDir: %s\n", tempDir)
+		//log.Printf("binaryFile: %s\n", binaryFile)
+		//log.Printf("binDir: %s\n", binDir)
+		//log.Printf("dataDir: %s\n", dataDir)
+		//log.Printf("tempDir: %s\n", tempDir)
 		log.Printf("PATH=%s\n", os.Getenv("PATH"))
 		log.Printf("cmd: %s\n", cmd)
 		log.Printf("cmd.Env[\n%s\n]\n", strings.Join(cmd.Env, "\n"))
-		log.Printf("cmd.Dir: %s\n", cmd.Dir)
+		//log.Printf("cmd.Dir: %s\n", cmd.Dir)
 	}
 	err = cmd.Run()
 	if err != nil {

@@ -1,75 +1,32 @@
 #!/usr/bin/env bash
-
 set -ue
 
-winpath() {
-    sed 's|^/c|c:|;s|/|\\|g;'
+asset_dir="$(realpath ./tesseract/assets)"
+
+rm -rf "$asset_dir"
+mkdir -p "$asset_dir/bin"
+
+command -v exetool >/dev/null 2>&1 || go install github.com/rstms/exetool@latest
+exetool --version
+
+command -v winocr >/dev/null 2>&1 || go install github.com/rstms/winocr@latest
+winocr --version
+
+install_asset() {
+    local src="$(realpath "$1")"
+    local dst="$(realpath "$asset_dir/bin/$(basename "$src")")"
+    cp -vp "$src" "$dst"
+    for file in $(exetool depends "$dst"); do 
+        cp -vrp "$file" "$asset_dir/bin/$(basename "$file")"
+    done
 }
 
-unixpath() {
-    sed 's|^\([a-zA-Z]\):|/\L\1|'
-}
+install_asset "$(command -v winocr.exe)"
 
-src_repo=github.com/rstms/winocr
-assets_dir=$(realpath ./cmd/assets)
+tesseract="$(command -v tesseract.exe)"
+install_asset "$tesseract"
 
-msys_dir=/c/msys64${MSYSTEM_PREFIX}
-
-build_tools_dir='C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools'
-runtime_dll_dir="$(unixpath <<<"${build_tools_dir}/Common7/IDE")"
-
-src_bin=$(realpath $(go env GOPATH)/src/${src_repo}/$(basename $src_repo).exe | unixpath)
-dst_bin=$(realpath ${assets_dir}/bin/$(basename $src_repo).exe | unixpath)
-
-tesseract_src_bin=$(unixpath <<<"${msys_dir}/bin/tesseract.exe")
-tesseract_dst_bin=$(unixpath <<<"${assets_dir}/bin/tesseract.exe")
-
-tmpdir=$(mktemp -d)
-cleanup() {
-    [ -z "$tmpdir" ] || rm -rf "$tmpdir"
-}
-trap cleanup EXIT
-
-dumpbin() {
-    local filename="$1"
-    shift
-    local args="$@"
-    local cmd=$tmpdir/dump.cmd
-    local dump=$(find "$(unixpath <<<$build_tools_dir)" -type f -name dumpbin.exe | grep x64/x64)
-    printf >$cmd '"%s" %s "%s"\n' "$(winpath <<<$dump)" "$args" "$(winpath <<<$filename)"
-    $cmd | awk '/\.[dD][lL][lL]$/ {print $1}'
-}
-
-rm -rf $assets_dir
-mkdir -p $assets_dir/bin
-
-cp -u $src_bin $dst_bin
-basename $dst_bin
-
-cp -u $tesseract_src_bin $tesseract_dst_bin
-
-deps="$(dumpbin $dst_bin /DEPENDENTS)"
-deps="$deps $(dumpbin $tesseract_dst_bin /DEPENDENTS)"
-deps="$deps tesseract.exe"
-deps=$(echo "$deps" | sort | uniq)
-
-for asset in $(sort<<<$deps | uniq); do
-    src=${msys_dir}/bin/$asset
-    dst=${assets_dir}/bin/$asset
-    case $asset in 
-        GDI32.*|KERNEL32.*|USER32.*) src=;;
-        api-ms-win-crt*) src="$(find "$runtime_dll_dir" -maxdepth 1 -type f -name $asset)";;
-    esac
-    if [ -n "$src" ]; then
-        echo $asset
-        cp -u "$src" "$dst"
-    fi
-done
-
-echo tessdata
-mkdir -p $assets_dir/tessdata
-cp -rp ${msys_dir}/share/tessdata $assets_dir
-
-echo "---BEGIN DLL DEPS---"
-dumpbin "${assets_dir}/bin/libtesseract-5.5.dll" /DEPENDENTS
-echo "---END DLL DEPS---"
+tessdata="$(dirname $(dirname "$tesseract"))/share/tessdata" 
+[ -d "$tessdata" ]
+rm -rf ${asset_dir}/tessdata
+cp -vrp "$tessdata" "$asset_dir"
