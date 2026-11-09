@@ -5,5 +5,5 @@ cruft
 *.core
 *.log
 *postactivate
-tesseract/assets
+assets/assets
 

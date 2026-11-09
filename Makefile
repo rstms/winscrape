@@ -9,7 +9,7 @@ default: build
 
 build: $(binary)
 
-$(binary): fmt tesseract/assets
+$(binary): fmt assets/assets
 	fix go build . ./...
 	go build -o $@ -buildmode exe 
 
@@ -71,5 +71,5 @@ sterile: clean
 show-vars:
 	@$(foreach var,$(all_variables),echo $(var)=$($(var));)
 
-tesseract/assets: 
-	./update-assets
+assets/assets: 
+	./update-assets $(realpath $@)

@@ -1,6 +1,6 @@
 // go-common local proxy functions
 
-package tesseract
+package assets
 
 import (
 	rstms "github.com/rstms/go-common"

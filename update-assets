@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ue
 
-asset_dir="$(realpath ./tesseract/assets)"
+asset_dir="${1:-$(realpath ./assets/assets)}"
 
 rm -rf "$asset_dir"
 mkdir -p "$asset_dir/bin"

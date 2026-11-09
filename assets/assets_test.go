@@ -1,4 +1,4 @@
-package tesseract
+package assets
 
 import (
 	"github.com/spf13/viper"
@@ -14,7 +14,7 @@ func initTestConfig(t *testing.T) {
 
 func TestTesseract(t *testing.T) {
 	initTestConfig(t)
-	tesser, err := NewTesseract()
+	a, err := NewAssets()
 	require.Nil(t, err)
-	require.NotNil(t, tesser)
+	require.NotNil(t, a)
 }
