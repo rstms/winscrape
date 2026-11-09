@@ -59,7 +59,7 @@ clean:
 	rm -f $(binary) *.core 
 	go clean
 	rm -rf dist && mkdir dist
-	rm -rf tesseract/assets
+	rm -rf assets/assets
 
 sterile: clean
 	go clean -i || true
@@ -71,5 +71,8 @@ sterile: clean
 show-vars:
 	@$(foreach var,$(all_variables),echo $(var)=$($(var));)
 
-assets/assets: 
+assets/assets:
 	./update-assets $(realpath $@)
+
+gen: assets/assets
+

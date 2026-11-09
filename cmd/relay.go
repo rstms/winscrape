@@ -49,11 +49,7 @@ func Relay(filename, command string, args []string) error {
 	if err != nil {
 		return Fatal(err)
 	}
-	if ViperGetBool("retain_assets") {
-		defer fmt.Fprintf(os.Stderr, "Retained files: %s\n", cache.CacheDir)
-	} else {
-		defer cache.Close()
-	}
+	defer cache.Close()
 
 	if debug {
 		args = append([]string{"-d"}, args...)

@@ -42,7 +42,7 @@ If the process has a main window, an image is captured to a
 a PNG file using the provided filename.
 If FILENAME is missing or '-', the image data is written to stdout.
 `,
-	Args: cobra.RangeArgs(1, 2),
+	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		cobra.CheckErr(Relay("winocr.exe", "image", args))
 	},
