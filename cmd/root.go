@@ -56,4 +56,5 @@ func Execute() {
 }
 func init() {
 	CobraInit(rootCmd)
+	OptionSwitch(rootCmd, "retain-assets", "R", "prevent deletion of temporary directory")
 }

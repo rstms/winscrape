@@ -11,7 +11,7 @@ build: $(binary)
 
 $(binary): fmt assets/assets
 	fix go build . ./...
-	go build -o $@ -buildmode exe 
+	go build
 
 fmt: go.sum
 	fix go fmt . ./...
