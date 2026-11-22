@@ -45,6 +45,13 @@ func Relay(filename, command string, args []string) error {
 	debug := ViperGetBool("debug")
 	verbose := ViperGetBool("verbose")
 
+	if ViperGetBool("update_assets") {
+		err := assets.DestroyCache()
+		if err != nil {
+			return Fatal(err)
+		}
+	}
+
 	cache, err := assets.NewAssets()
 	if err != nil {
 		return Fatal(err)
