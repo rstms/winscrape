@@ -45,11 +45,20 @@ func Relay(filename, command string, args []string) error {
 	debug := ViperGetBool("debug")
 	verbose := ViperGetBool("verbose")
 
-	if ViperGetBool("update_assets") {
+	if ViperGetBool("delete_assets") {
 		err := assets.DestroyCache()
 		if err != nil {
 			return Fatal(err)
 		}
+	}
+
+	if command == "cache" {
+		cache, err := assets.CacheDir()
+		if err != nil {
+			return Fatal(err)
+		}
+		fmt.Printf("%s\n", cache)
+		return nil
 	}
 
 	cache, err := assets.NewAssets()
@@ -57,7 +66,9 @@ func Relay(filename, command string, args []string) error {
 		return Fatal(err)
 	}
 	if ViperGetBool("retain_assets") {
-		log.Printf("cache directory: %s\n", cache.CacheDir)
+		if ViperGetBool("debug") {
+			defer log.Printf("retaining cache directory: %s\n", cache.CacheDir)
+		}
 	} else {
 		defer cache.Close()
 	}

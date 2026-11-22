@@ -56,6 +56,6 @@ func Execute() {
 }
 func init() {
 	CobraInit(rootCmd)
-	OptionSwitch(rootCmd, "update-assets", "U", "refresh cached assets directory")
+	OptionSwitch(rootCmd, "delete-assets", "D", "delete update cached assets directory")
 	OptionSwitch(rootCmd, "retain-assets", "R", "prevent deletion of cached assets directory")
 }

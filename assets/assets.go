@@ -58,11 +58,28 @@ func CreateCache() (string, error) {
 }
 
 func DestroyCache() error {
-	_, err := newAssets(DeleteCache, "", []string{})
+	cacheDir, err := CacheDir()
+	if err != nil {
+		return Fatal(err)
+	}
+	err = deleteCache(cacheDir)
 	if err != nil {
 		return Fatal(err)
 	}
 	return nil
+}
+
+func CacheDir() (string, error) {
+	cache, err := os.UserCacheDir()
+	if err != nil {
+		return "", Fatal(err)
+	}
+
+	name, err := getName()
+	if err != nil {
+		return "", Fatal(err)
+	}
+	return filepath.Join(cache, name), nil
 }
 
 func NewAssets() (*Assets, error) {
@@ -89,19 +106,19 @@ func getName() (string, error) {
 
 func newAssets(option CacheOption, command string, args []string) (*Assets, error) {
 
-	cache, err := os.UserCacheDir()
+	name, err := getName()
 	if err != nil {
 		return nil, Fatal(err)
 	}
 
-	name, err := getName()
+	cacheDir, err := CacheDir()
 	if err != nil {
 		return nil, Fatal(err)
 	}
 
 	a := Assets{
 		Name:     name,
-		CacheDir: filepath.Join(cache, name),
+		CacheDir: cacheDir,
 		Env:      map[string]string{},
 		Option:   option,
 		debug:    ViperGetBool("debug"),
@@ -171,7 +188,7 @@ func (a *Assets) Setenv() error {
 
 func (a *Assets) Close() error {
 	if a.dirty {
-		err := a.deleteCache()
+		err := deleteCache(a.CacheDir)
 		if err != nil {
 			return Fatal(err)
 		}
@@ -179,17 +196,17 @@ func (a *Assets) Close() error {
 	return nil
 }
 
-func (a *Assets) deleteCache() error {
+func deleteCache(cacheDir string) error {
 
-	if a.CacheDir != "" && IsDir(a.CacheDir) {
-		if a.debug {
-			log.Printf("deleting cache: %s\n", a.CacheDir)
+	if cacheDir != "" && IsDir(cacheDir) {
+		if ViperGetBool("debug") {
+			log.Printf("deleting cache: %s\n", cacheDir)
 		}
-		err := filepath.WalkDir(a.CacheDir, a.chmodWalker)
+		err := filepath.WalkDir(cacheDir, chmodWalker)
 		if err != nil {
 			return Fatal(err)
 		}
-		err = os.RemoveAll(a.CacheDir)
+		err = os.RemoveAll(cacheDir)
 		if err != nil {
 			return Fatal(err)
 		}
@@ -211,16 +228,15 @@ func (a *Assets) generate() error {
 		a.dirty = true
 
 	case DeleteCache, WriteCache:
-		err := a.deleteCache()
+		err := deleteCache(a.CacheDir)
 		if err != nil {
 			return Fatal(err)
 		}
+		if a.Option == DeleteCache {
+			return nil
+		}
 	default:
 		return Fatalf("unexpected option: %v", a.Option)
-	}
-
-	if a.Option == DeleteCache {
-		return nil
 	}
 
 	if a.debug {
@@ -296,7 +312,7 @@ func (a *Assets) envWalker(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-func (a *Assets) chmodWalker(path string, d fs.DirEntry, err error) error {
+func chmodWalker(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
 	}
