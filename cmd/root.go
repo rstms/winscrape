@@ -58,4 +58,5 @@ func init() {
 	CobraInit(rootCmd)
 	OptionSwitch(rootCmd, "delete-assets", "D", "delete update cached assets directory")
 	OptionSwitch(rootCmd, "retain-assets", "R", "prevent deletion of cached assets directory")
+	OptionSwitch(rootCmd, "maximized", "M", "maximize target and capture root window")
 }

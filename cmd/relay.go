@@ -79,6 +79,9 @@ func Relay(filename, command string, args []string) error {
 	if verbose {
 		args = append([]string{"-v"}, args...)
 	}
+	if ViperGetBool("maximized") {
+		args = append([]string{"-M"}, args...)
+	}
 
 	execFile := filepath.Join(cache.BinDir, filename)
 	cmd := exec.Command(execFile, append([]string{command}, args...)...)
