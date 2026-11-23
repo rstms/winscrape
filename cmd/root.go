@@ -40,7 +40,7 @@ var cfgFile string
 var ExitCode int = -1
 
 var rootCmd = &cobra.Command{
-	Version: "0.1.5",
+	Version: "0.1.6",
 	Use:     "winscrape",
 	Short:   "scrape process window content",
 	Long: `
